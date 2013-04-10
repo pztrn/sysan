@@ -1,4 +1,4 @@
-**LogAn** is a logs analyzer.
+**SysAn** is a logs analyzer.
 
 ## Installation
 There is no possibility to install SysAn yet. But you can hust clone this repo and launch ''src/sysan.py''.
