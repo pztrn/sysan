@@ -11,32 +11,29 @@ from lib.exceptions import Sysan_Exception
 class Configuration:
     def __init__(self):
         self.print_data("Starting configuration initialization...")
+        self.config_read_failed = [False, False, False]
 
         # Get LogAn path
         self.path = "/".join(sys.modules["lib.config"].__file__.split("/")[:-2])
 
         self.config = configparser.ConfigParser()
 
-        # Check for config existing.
-        if os.path.exists(os.path.expanduser("~/.config/logan/conf.d/")):
-            config_path = os.path.expanduser("~/.config/logan/conf.d/")
-        elif os.path.exists(os.path.join(self.path, "conf.d")):
-            config_path = os.path.join(self.path, "conf.d")
-        else:
-            config_path = "/etc/logan/conf.d/"
-
-        self.print_data("Configuration found in: {0}".format(config_path))
+        # Load configuration. First - from SysAn directory, 
+        # then from /etc/sysan/conf.d/, and then from user home
+        # directory
         self.print_data("Loading configuration...")
+        if not os.path.exists(os.path.expanduser("~/.config/sysan/conf.d/")):
+            if not os.path.exists("/etc/sysan/conf.d/"):
+                if not os.path.exists(os.path.join(self.path, "conf.d")):
+                    raise Config_Load_Failed
+                else:
+                    self.read_config(os.path.join(self.path, "conf.d"))
+            else:
+                self.read_config("/etc/sysan/conf.d/")
+        else:
+            self.read_config(os.path.expanduser("~/.config/sysan/conf.d/"))
 
-        # Load configuration from conf.d directory.
-        try:
-            for filename in os.listdir(config_path):
-                # Configuration file MUST ended with ".conf"
-                if filename[-5:] == ".conf":
-                    # Lets try to load config.
-                    self.config.read(os.path.join(config_path, filename))
-        except:
-            raise Config_Load_Failed
+        print(self.config["mailer"]["enabled"])
 
     def get_config(self):
         """
@@ -49,6 +46,18 @@ class Configuration:
         """
         if not common.CRON:
             print(data)
+
+    def read_config(self, config_path):
+        """
+        Reads configuration. Really.
+        """
+        print(config_path)
+        for filename in os.listdir(config_path):
+            # Configuration file MUST ended with ".conf"
+            if filename[-5:] == ".conf":
+                # Lets try to load config.
+                self.config.read(os.path.join(config_path, filename))
+
 
 class Config_Load_Failed(Sysan_Exception):
     """
