@@ -64,7 +64,6 @@ class SSH_Parser(SysAn_Parser):
                     if "Failed" in line:
                         self.process_line("rejected", line)
 
-
     def process_line(self, data_type, line):
         """
         Parse line and add parsed data into dict.
@@ -72,6 +71,7 @@ class SSH_Parser(SysAn_Parser):
         ip_address = line.split()[10]
         user = line.split()[8]
         last_login_time = "{0} {1} {2}".format(line.split()[0], line.split()[1], line.split()[2])
+        print(last_login_time)
         # Incrementing total connections count.
         self.data[data_type]["connections"] += 1
         # If IP address not in "accepted" - create new
@@ -97,7 +97,7 @@ class SSH_Parser(SysAn_Parser):
             else:
                 self.data[data_type][ip_address]["users"][user]["attempts"] += 1
             
-            self.data[data_type][ip_address]["last_login_time"] = last_login_time
+        self.data[data_type][ip_address]["last_login_time"] = last_login_time
 
 
     def format_data(self):
