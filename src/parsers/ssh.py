@@ -58,11 +58,11 @@ class SSH_Parser(SysAn_Parser):
                 # Checking that day and month are equal to requested.
                 # Usually this is current date minus one day.
                 if int(line.split()[1]) == self.day_raw and line.split()[0] == self.month_hr:
-                    ip_address = line.split()[10]
-                    user = line.split()[8]
-                    last_login_time = "{0} {1} {2}".format(line.split()[0], line.split()[1], line.split()[2])
                     # Counting accepted connections.
                     if "Accepted" in line:
+                        ip_address = line.split()[10]
+                        user = line.split()[8]
+                        last_login_time = "{0} {1} {2}".format(line.split()[0], line.split()[1], line.split()[2])
                         # Incrementing total connections count.
                         self.data["accepted"]["connections"] += 1
                         # If IP address not in "accepted" - create new
@@ -73,23 +73,28 @@ class SSH_Parser(SysAn_Parser):
                             if not "users" in self.data["accepted"][ip_address]:
                                 self.data["accepted"][ip_address]["users"] = {}
                             if not user in self.data["accepted"][ip_address]["users"]:
-                                self.data["accepted"][ip_address]["users"][user] = 1
+                                self.data["accepted"][ip_address]["users"][user] = {}
+                                self.data["accepted"][ip_address]["users"][user]["attempts"] = 1
                             else:
-                                self.data["accepted"][ip_address]["users"][user] += 1
-                            self.data["accepted"][ip_address]["last_login_time"] = last_login_time
+                                self.data["accepted"][ip_address]["users"][user]["attempts"] += 1
                         else:
                             # We got IP address. Incrementing...
                             self.data["accepted"][ip_address]["count"] += 1
                             if not "users" in self.data["accepted"][ip_address]:
                                 self.data["accepted"][ip_address]["users"] = {}
-                                if not user in self.data["accepted"][ip_address]["users"]:
-                                    self.data["accepted"][ip_address]["users"][user] = 1
-                                else:
-                                    self.data["accepted"][ip_address]["users"][user] += 1
+                            if not user in self.data["accepted"][ip_address]["users"]:
+                                self.data["accepted"][ip_address]["users"][user] = {}
+                                self.data["accepted"][ip_address]["users"][user]["attempts"] = 1
+
+                            else:
+                                self.data["accepted"][ip_address]["users"][user]["attempts"] += 1
 
                             self.data["accepted"][ip_address]["last_login_time"] = last_login_time
                     # Counting rejected connections.
                     if "Failed" in line:
+                        ip_address = line.split()[10]
+                        user = line.split()[8]
+                        last_login_time = "{0} {1} {2}".format(line.split()[0], line.split()[1], line.split()[2])
                         # Incrementing total connections count.
                         self.data["rejected"]["connections"] += 1
                         # If IP address not in "accepted" - create new
@@ -100,21 +105,25 @@ class SSH_Parser(SysAn_Parser):
                             if not "users" in self.data["rejected"][ip_address]:
                                 self.data["rejected"][ip_address]["users"] = {}
                             if not user in self.data["rejected"][ip_address]["users"]:
-                                self.data["rejected"][ip_address]["users"][user] = 1
+                                self.data["rejected"][ip_address]["users"][user] = {}
+                                self.data["rejected"][ip_address]["users"][user]["attempts"] = 1
                             else:
-                                self.data["rejected"][ip_address]["users"][user] += 1
-                            self.data["rejected"][ip_address]["last_login_time"] = last_login_time
+                                self.data["rejected"][ip_address]["users"][user]["attempts"] += 1
                         else:
                             # We got IP address. Incrementing...
                             self.data["rejected"][ip_address]["count"] += 1
                             if not "users" in self.data["rejected"][ip_address]:
                                 self.data["rejected"][ip_address]["users"] = {}
-                                if not user in self.data["rejected"][ip_address]["users"]:
-                                    self.data["rejected"][ip_address]["users"][user] = 1
-                                else:
-                                    self.data["rejected"][ip_address]["users"][user] += 1
+                            if not user in self.data["rejected"][ip_address]["users"]:
+                                self.data["rejected"][ip_address]["users"][user] = {}
+                                self.data["rejected"][ip_address]["users"][user]["attempts"] = 1
+
+                            else:
+                                self.data["rejected"][ip_address]["users"][user]["attempts"] += 1
 
                             self.data["rejected"][ip_address]["last_login_time"] = last_login_time
+
+        print(self.data)
 
 
     def format_data(self):
@@ -128,32 +137,44 @@ class SSH_Parser(SysAn_Parser):
         self.to_log = {}
         self.to_log["header"] = "SSHd Connection stats"
         text = ""
-        text += "Accepted connections: {0}\n".format(accepted_connections)
+        text += "<!-- delimiter3 -->"
+        text += "Accepted connections:          {0}\n".format(accepted_connections)
+        text += "<!-- delimiter3 -->"
         for ip_address in self.data["accepted"]:
-            text += "IP ADDRESS:           {0}\n".format(ip_address)
-            text += "Connections count:    {0}\n".format(self.data["accepted"][ip_address]["count"])
+            text += "IP ADDRESS:                    {0}\n".format(ip_address)
+            text += "Connections count:             {0}\n".format(self.data["accepted"][ip_address]["count"])
 
             users_line = ""
             for item in self.data["accepted"][ip_address]["users"]:
-                users_line += "{0} ({1} connections)".format(item, self.data["accepted"][ip_address]["users"][item])
+                users_line += "{0} ({1} connections)".format(item, self.data["accepted"][ip_address]["users"][item]["attempts"])
+                users_line += " | "
+            users_line = users_line[:-3]
 
-            text += "Logins:               {0}\n".format(users_line)
-            text += "Last login time:      {0}\n".format(self.data["accepted"][ip_address]["last_login_time"])
+            text += "Logins:                        {0}\n".format(users_line)
+            text += "Last login time:               {0}\n".format(self.data["accepted"][ip_address]["last_login_time"])
             text += "<!-- delimiter2 -->"
 
         text += "<!-- delimiter -->"
 
-        text += "Rejected connections: {0}\n".format(rejected_connections)
+        text += "<!-- delimiter3 -->"
+        text += "Rejected connection attempts:  {0}\n".format(rejected_connections)
+        text += "<!-- delimiter3 -->"
         for ip_address in self.data["rejected"]:
-            text += "IP ADDRESS:           {0}\n".format(ip_address)
-            text += "Connections count:    {0}\n".format(self.data["rejected"][ip_address]["count"])
+            text += "IP ADDRESS:                    {0}\n".format(ip_address)
+            text += "Attempts count:                {0}\n".format(self.data["rejected"][ip_address]["count"])
 
             users_line = ""
             for item in self.data["rejected"][ip_address]["users"]:
-                users_line += "{0} ({1} connections)".format(item, self.data["rejected"][ip_address]["users"][item])
+                users_line += "{0} ({1} attempts)".format(item, self.data["rejected"][ip_address]["users"][item]["attempts"])
+                if self.data["rejected"][ip_address]["users"][item]["attempts"] > int(self.config["ssh"]["max_failures"]):
+                    users_line += " (BREAK-IN!)"
 
-            text += "Logins:               {0}\n".format(users_line)
-            text += "Last login time:      {0}\n".format(self.data["rejected"][ip_address]["last_login_time"])
+                users_line += " | "
+
+            users_line = users_line[:-3]
+
+            text += "Logins:                        {0}\n".format(users_line)
+            text += "Last login time:               {0}\n".format(self.data["rejected"][ip_address]["last_login_time"])
             text += "<!-- delimiter2 -->"
 
         self.to_log["data"] = text

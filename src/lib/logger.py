@@ -66,6 +66,7 @@ class Logger:
             string += "-" * (len(item[1]["header"]) + 2) + "\n"
             data = item[1]["data"].replace("<!-- delimiter -->", "\n")
             data = data.replace("<!-- delimiter2 -->", "*" * 40 + "\n")
+            data = data.replace("<!-- delimiter3 -->", "=" * 40 + "\n")
             string += data
 
         return string
