@@ -47,7 +47,7 @@ class Logger:
         Produce plaintext log.
         """
         string = ""
-        header_string = "SysAn report for {0} on {1} {2}.".format(socket.gethostname(), int(time.strftime("%d", time.localtime())), time.strftime("%b %Y", time.localtime()))
+        header_string = "SysAn report for {0} on {1}.".format(socket.gethostname(), common.DATE)
         #string += "\u250f" + "\u2501" * (len(header_string) + 2) + "\u2513\n"
         #string += "\u2503 " + header_string + " \u2503\n"
         #string += "\u2517" + "\u2501" * (len(header_string) + 2) + "\u251b\n"
@@ -65,6 +65,7 @@ class Logger:
             string += "| " + item[1]["header"] + " |\n"
             string += "-" * (len(item[1]["header"]) + 2) + "\n"
             data = item[1]["data"].replace("<!-- delimiter -->", "\n")
+            data = data.replace("<!-- delimiter2 -->", "*" * 40 + "\n")
             string += data
 
         return string

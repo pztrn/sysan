@@ -12,6 +12,8 @@ LOGGER = ""
 ROOT_DIR = ""
 # Cronjob?
 CRON = False
+# Date to analyze.
+DATE = ""
 
 def set_config(config):
     global CONFIG
@@ -33,3 +35,7 @@ def set_cronjob():
     print("Cron mode enabled.")
     global CRON
     CRON = True
+
+def set_date(date):
+    global DATE
+    DATE = date

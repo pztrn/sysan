@@ -33,8 +33,6 @@ class Configuration:
         else:
             self.read_config(os.path.expanduser("~/.config/sysan/conf.d/"))
 
-        print(self.config["mailer"]["enabled"])
-
     def get_config(self):
         """
         Returns a configuration.

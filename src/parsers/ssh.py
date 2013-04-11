@@ -17,8 +17,12 @@ class SSH_Parser(SysAn_Parser):
 
         self.ssh_logs = []
         self.data = {
-            "accepted": {},
-            "rejected": {}
+            "accepted": {
+                "connections"   : 0,
+            },
+            "rejected": {
+                "connections"   : 0,
+            }
         }
 
     def execute(self):
@@ -49,52 +53,108 @@ class SSH_Parser(SysAn_Parser):
         """
         file_data = open(filename, "r").read().split("\n")
         for line in file_data:
-            if "Accepted" in line:
-                month = time.strftime("%b", time.localtime())
-                day = time.localtime()[2]
-                if int(line.split()[1]) == int(day) - 1 and line.split()[0] == month:
+            # We need only lines that contains "sshd" word.
+            if "sshd" in line:
+                # Checking that day and month are equal to requested.
+                # Usually this is current date minus one day.
+                if int(line.split()[1]) == self.day_raw and line.split()[0] == self.month_hr:
                     ip_address = line.split()[10]
                     user = line.split()[8]
                     last_login_time = "{0} {1} {2}".format(line.split()[0], line.split()[1], line.split()[2])
-                    if not ip_address in self.data["accepted"]:
-                        self.data["accepted"][ip_address] = {}
-                        self.data["accepted"][ip_address]["count"] = 1
-                        if not "users" in self.data["accepted"][ip_address]:
-                            self.data["accepted"][ip_address]["users"] = {}
-                        if not user in self.data["accepted"][ip_address]["users"]:
-                            self.data["accepted"][ip_address]["users"][user] = 1
-                        else:
-                            self.data["accepted"][ip_address]["users"][user] += 1
-                        self.data["accepted"][ip_address]["last_login_time"] = last_login_time
-                    else:
-                        self.data["accepted"][ip_address]["count"] += 1
-                        if not "users" in self.data["accepted"][ip_address]:
-                            self.data["accepted"][ip_address]["users"] = {}
+                    # Counting accepted connections.
+                    if "Accepted" in line:
+                        # Incrementing total connections count.
+                        self.data["accepted"]["connections"] += 1
+                        # If IP address not in "accepted" - create new
+                        # record for it.
+                        if not ip_address in self.data["accepted"]:
+                            self.data["accepted"][ip_address] = {}
+                            self.data["accepted"][ip_address]["count"] = 1
+                            if not "users" in self.data["accepted"][ip_address]:
+                                self.data["accepted"][ip_address]["users"] = {}
                             if not user in self.data["accepted"][ip_address]["users"]:
                                 self.data["accepted"][ip_address]["users"][user] = 1
                             else:
                                 self.data["accepted"][ip_address]["users"][user] += 1
+                            self.data["accepted"][ip_address]["last_login_time"] = last_login_time
+                        else:
+                            # We got IP address. Incrementing...
+                            self.data["accepted"][ip_address]["count"] += 1
+                            if not "users" in self.data["accepted"][ip_address]:
+                                self.data["accepted"][ip_address]["users"] = {}
+                                if not user in self.data["accepted"][ip_address]["users"]:
+                                    self.data["accepted"][ip_address]["users"][user] = 1
+                                else:
+                                    self.data["accepted"][ip_address]["users"][user] += 1
 
-                        self.data["accepted"][ip_address]["last_login_time"] = last_login_time
+                            self.data["accepted"][ip_address]["last_login_time"] = last_login_time
+                    # Counting rejected connections.
+                    if "Failed" in line:
+                        # Incrementing total connections count.
+                        self.data["rejected"]["connections"] += 1
+                        # If IP address not in "accepted" - create new
+                        # record for it.
+                        if not ip_address in self.data["rejected"]:
+                            self.data["rejected"][ip_address] = {}
+                            self.data["rejected"][ip_address]["count"] = 1
+                            if not "users" in self.data["rejected"][ip_address]:
+                                self.data["rejected"][ip_address]["users"] = {}
+                            if not user in self.data["rejected"][ip_address]["users"]:
+                                self.data["rejected"][ip_address]["users"][user] = 1
+                            else:
+                                self.data["rejected"][ip_address]["users"][user] += 1
+                            self.data["rejected"][ip_address]["last_login_time"] = last_login_time
+                        else:
+                            # We got IP address. Incrementing...
+                            self.data["rejected"][ip_address]["count"] += 1
+                            if not "users" in self.data["rejected"][ip_address]:
+                                self.data["rejected"][ip_address]["users"] = {}
+                                if not user in self.data["rejected"][ip_address]["users"]:
+                                    self.data["rejected"][ip_address]["users"][user] = 1
+                                else:
+                                    self.data["rejected"][ip_address]["users"][user] += 1
+
+                            self.data["rejected"][ip_address]["last_login_time"] = last_login_time
+
 
     def format_data(self):
         """
         Format data into applicable format.
         """
+        accepted_connections = self.data["accepted"]["connections"]
+        rejected_connections = self.data["rejected"]["connections"]
+        del(self.data["accepted"]["connections"])
+        del(self.data["rejected"]["connections"])
         self.to_log = {}
         self.to_log["header"] = "SSHd Connection stats"
         text = ""
+        text += "Accepted connections: {0}\n".format(accepted_connections)
         for ip_address in self.data["accepted"]:
-            text += "IP ADDRESS:          {0}\n".format(ip_address)
-            text += "Connections count:   {0}\n".format(self.data["accepted"][ip_address]["count"])
+            text += "IP ADDRESS:           {0}\n".format(ip_address)
+            text += "Connections count:    {0}\n".format(self.data["accepted"][ip_address]["count"])
 
             users_line = ""
             for item in self.data["accepted"][ip_address]["users"]:
                 users_line += "{0} ({1} connections)".format(item, self.data["accepted"][ip_address]["users"][item])
 
-            text += "Logins:              {0}\n".format(users_line)
-            text += "Last login time:     {0}\n".format(self.data["accepted"][ip_address]["last_login_time"])
-            text += "<!-- delimiter -->"
+            text += "Logins:               {0}\n".format(users_line)
+            text += "Last login time:      {0}\n".format(self.data["accepted"][ip_address]["last_login_time"])
+            text += "<!-- delimiter2 -->"
+
+        text += "<!-- delimiter -->"
+
+        text += "Rejected connections: {0}\n".format(rejected_connections)
+        for ip_address in self.data["rejected"]:
+            text += "IP ADDRESS:           {0}\n".format(ip_address)
+            text += "Connections count:    {0}\n".format(self.data["rejected"][ip_address]["count"])
+
+            users_line = ""
+            for item in self.data["rejected"][ip_address]["users"]:
+                users_line += "{0} ({1} connections)".format(item, self.data["rejected"][ip_address]["users"][item])
+
+            text += "Logins:               {0}\n".format(users_line)
+            text += "Last login time:      {0}\n".format(self.data["rejected"][ip_address]["last_login_time"])
+            text += "<!-- delimiter2 -->"
 
         self.to_log["data"] = text
 
