@@ -49,7 +49,6 @@ class Configuration:
         """
         Reads configuration. Really.
         """
-        print(config_path)
         for filename in os.listdir(config_path):
             # Configuration file MUST ended with ".conf"
             if filename[-5:] == ".conf":
