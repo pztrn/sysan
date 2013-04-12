@@ -71,7 +71,6 @@ class SSH_Parser(SysAn_Parser):
         ip_address = line.split()[10]
         user = line.split()[8]
         last_login_time = "{0} {1} {2}".format(line.split()[0], line.split()[1], line.split()[2])
-        print(last_login_time)
         # Incrementing total connections count.
         self.data[data_type]["connections"] += 1
         # If IP address not in "accepted" - create new

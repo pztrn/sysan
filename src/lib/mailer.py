@@ -40,7 +40,7 @@ class Mailer:
         p = os.popen("/usr/sbin/sendmail -t", "w")
         p.write("From: {0}\n".format(self.mail_from))
         p.write("To: {0}\n".format(self.mail_to))
-        p.write("Subject: SysAn system logs analyze report\n")
+        p.write("Subject: SysAn system logs analyze report ({0})\n",format(common.DATE))
         p.write("\n")
         p.write(self.mail_text)
         retcode = p.close()
@@ -51,7 +51,7 @@ class Mailer:
         """
         Send mail with SMTP.
         """
-        self.mail_text = "Subject: SysAn system logs analyze report\n\n" + self.mail_text
+        self.mail_text = "Subject: SysAn system logs analyze report ({0})\n\n".format(common.DATE) + self.mail_text
         server = smtplib.SMTP(self.smtp_host)
         server.starttls()
         server.login(self.smtp_username, self.smtp_password)

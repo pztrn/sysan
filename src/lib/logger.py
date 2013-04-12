@@ -63,7 +63,7 @@ class Logger:
             #string += "\u2517" + "\u2501" * (len(item[1]["header"]) + 2) + "\u251b\n"
             string += "-" * (len(item[1]["header"]) + 4) + "\n"
             string += "| " + item[1]["header"] + " |\n"
-            string += "-" * (len(item[1]["header"]) + 2) + "\n"
+            string += "-" * (len(item[1]["header"]) + 4) + "\n"
             data = item[1]["data"].replace("<!-- delimiter -->", "\n")
             data = data.replace("<!-- delimiter2 -->", "*" * 40 + "\n")
             data = data.replace("<!-- delimiter3 -->", "=" * 40 + "\n")
