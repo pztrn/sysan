@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 # Parsers metaclass
+import gzip
+import os
 import time
 
 from lib import common
@@ -14,6 +16,8 @@ class SysAn_Parser:
         self.distro = common.DISTRO
 
         self.config = common.CONFIG
+
+        self.logs_list = []
 
         # Developer mode enabled? :)
         if self.config["parsers"]["override_day_to_analyze"] == "yes":
@@ -48,3 +52,30 @@ class SysAn_Parser:
 
     def add_to_log(self, text):
         common.LOGGER.add_to_log(self.parser_name, text)
+
+    def get_logs_list(self, log_name):
+        """
+        Get logs list for parser.
+        """
+        logs_list = os.listdir(self.root_dir + "/var/log")
+        for item in logs_list:
+            if "gz" in item:
+                if self.config[self.parser_name.lower()]["parse_compressed"] == "yes":
+                    if log_name in item:
+                        self.logs_list.append(self.root_dir + "/var/log/" + item)
+            else:
+                if log_name in item:
+                    self.logs_list.append(self.root_dir + "/var/log/" + item)
+
+    def read_file(self, file_name):
+        """
+        Read file and return a list, splitted by line break.
+        """
+        if "gz" in file_name:
+            data = gzip.open(file_name, "r")
+            data = data.read()
+            data = str(data).split("\n")
+        else:
+            data = open(file_name, "r")
+
+        return data

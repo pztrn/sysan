@@ -29,19 +29,11 @@ class SSH_Parser(SysAn_Parser):
         """
         Analyze SSHd logs, count uniques IPs.
         """
-        # Get list of SSH logs files.
-        logs_list = os.listdir(self.root_dir + "/var/log")
-        for item in logs_list:
-            if "gz" in item:
-                if self.config["ssh"]["parse_compressed"] == "yes":
-                    if logs[self.distro[0]] in item:
-                        self.ssh_logs.append(self.root_dir + "/var/log/" + item)
-            else:
-                if logs[self.distro[0]] in item:
-                    self.ssh_logs.append(self.root_dir + "/var/log/" + item)
+        # Get logs list.
+        self.get_logs_list(logs[self.distro[0]])
 
         # Let's roll!
-        for filename in self.ssh_logs:
+        for filename in self.logs_list:
             self.parse_log(filename)
 
         # Format data
@@ -51,7 +43,7 @@ class SSH_Parser(SysAn_Parser):
         """
         Parse specified file.
         """
-        file_data = open(filename, "r").read().split("\n")
+        file_data = self.read_file(filename)
         for line in file_data:
             # We need only lines that contains "sshd" word.
             if "sshd" in line:
