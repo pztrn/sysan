@@ -18,8 +18,9 @@ class MAIL_Parser(SysAn_Parser):
 
         self.to_log = {
             "mails"             : {
-                "sent"          : {},
-                "rejected"      : {}
+                "sent"          : 0,
+                "failed"        : 0,
+                "in_queue"      : 0
             },
             "connections"       : {
                 "accepted"      : {
@@ -116,7 +117,12 @@ class MAIL_Parser(SysAn_Parser):
         """
         Parse postfix log line.
         """
-        pass
+        if "status=sent" in line:
+            self.to_log["mails"]["sent"] += 1
+        elif "status=bounced" in line:
+            self.to_log["mails"]["failed"] += 1
+        elif "status=deffered" in line:
+            self.to_log["mails"]["in_queue"] += 1
 
     def process_spamassassin_line(self, line):
         """
@@ -148,7 +154,10 @@ class MAIL_Parser(SysAn_Parser):
         for user in self.to_log["connections"]["rejected"]["incoming"]:
             text += "  * {0} ({1} connections)\n".format(user, self.to_log["connections"]["rejected"]["incoming"][user])
         text += "<!-- delimiter2 -->"
-
+        text += "Mails statistics\n"
+        text += "<!-- delimiter3 -->"
+        text += "Sent mails:                    {0}\n".format(self.to_log["mails"]["sent"])
+        text += "Rejected mails:                {0}\n".format(self.to_log["mails"]["failed"])
 
         self.to_log["data"] = text
         self.add_to_log(self.to_log)
